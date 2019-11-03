@@ -1,0 +1,15 @@
+#!/bin/bash -eux
+# Builds a single verilog file and programs it onto the icebreaker board.
+
+# Build configuration.
+VERILOG="7seg_count.v"
+PCF="icebreaker.pcf"
+
+# Perform the build in a temporary directory.
+WORKDIR="$(mktemp -d)"
+trap 'rm -rf "${WORKDIR}"' EXIT
+yosys -p "synth_ice40 -top top -json ${WORKDIR}/program.json" "${VERILOG}"
+nextpnr-ice40 --up5k --json "${WORKDIR}/program.json" --pcf "${PCF}" --asc "${WORKDIR}/program.asc" --package sg48
+icetime -d up5k -mtr "${WORKDIR}/program.rpt" "${WORKDIR}/program.asc"
+icepack "${WORKDIR}/program.asc" "${WORKDIR}/program.bin"
+iceprog "${WORKDIR}/program.bin"

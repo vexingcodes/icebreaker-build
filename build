@@ -1,0 +1,12 @@
+#!/bin/bash -eux
+
+# Parse command-line options.
+[[ ${#} -ne 0 && ${#} -ne 1 ]] && echo "Usage ./${0} [--shell]" && exit 1
+[[ ${#} -eq 1 && "${1}" != "--shell" ]] && echo "Usage ./${0} [--shell]" && exit 1
+CMD=./build
+[[ ${#} -eq 1 ]] && CMD=bash
+
+# Build and run the container.
+cd "$(readlink --canonicalize "$(dirname "$0")")"
+docker build . --tag icebreaker
+docker run --interactive --tty --rm --privileged --mount type=bind,source="$(pwd)/src",target="/src" icebreaker ${CMD}
